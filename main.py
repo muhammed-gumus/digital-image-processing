@@ -33,7 +33,7 @@ def main():
                 threshold = int(input("Lütfen bir eşik değeri girin: "))
                 image = convert_to_binary(image, threshold)
             elif option == 'c':
-                image = zoom_in_out(image)
+                image = zoom_in_out(image, 2.0)
             elif option == 'd':
                 image = crop_region(image)
             elif option == 'e':
@@ -82,14 +82,19 @@ def convert_to_binary(image, threshold):
     return binary_image
 
 
-def zoom_in_out(image, factor=2):
-    # Resmi belirli bir faktörle büyütme (zoom in) veya küçültme (zoom out)
-    height, width = image.shape[:2]
-    new_height, new_width = int(height * factor), int(width * factor)
-    zoomed_image = cv2.resize(image, (new_width, new_height))
-    cv2.imwrite("zoomed_image.jpg", zoomed_image)
-    print(f"Resim {factor}-kat büyütüldü/küçültüldü.")
-    return zoomed_image
+def zoom_in_out(img, zoom, coord=None):
+    # Translate to zoomed coordinates
+    h, w, _ = [ zoom * i for i in img.shape ]
+    
+    if coord is None: cx, cy = w/2, h/2
+    else: cx, cy = [ zoom*c for c in coord ]
+    
+    img = cv2.resize( img, (0, 0), fx=zoom, fy=zoom)
+    img = img[ int(round(cy - h/zoom * .5)) : int(round(cy + h/zoom * .5)),
+               int(round(cx - w/zoom * .5)) : int(round(cx + w/zoom * .5)),
+               : ]
+    cv2.imwrite("zoom_image.jpg", img)
+    return img
 
 
 def crop_region(image):
